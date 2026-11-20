@@ -1,0 +1,72 @@
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-box-seam text-primary"></i> {{ esEdicion ? 'Editar producto' : 'Nuevo producto' }}</h1>
+    <p>Los campos marcados con * son obligatorios</p>
+  </div>
+  <a class="btn btn-outline-secondary" routerLink="/productos"><i class="bi bi-arrow-left"></i> Volver</a>
+</div>
+
+@if (error()) { <div class="alert alert-danger"><i class="bi bi-x-circle"></i> {{ error() }}</div> }
+
+<div class="card p-4" style="max-width: 900px">
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label" for="codigo">Código *</label>
+        <input id="codigo" class="form-control text-uppercase" formControlName="codigo" placeholder="AB-010" [class.is-invalid]="invalido('codigo') || erroresServidor()['codigo']">
+        @if (invalido('codigo')) { <div class="invalid-feedback">Letras, números y guion; de 3 a 15 caracteres.</div> }
+        @if (erroresServidor()['codigo']) { <div class="invalid-feedback">{{ erroresServidor()['codigo'] }}</div> }
+      </div>
+      <div class="col-md-8">
+        <label class="form-label" for="nombre">Nombre *</label>
+        <input id="nombre" class="form-control" formControlName="nombre" placeholder="Ej. Leche Gloria Azul 400 g" [class.is-invalid]="invalido('nombre')">
+        @if (invalido('nombre')) { <div class="invalid-feedback">Entre 3 y 60 caracteres.</div> }
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="categoria">Categoría *</label>
+        <select id="categoria" class="form-select" formControlName="categoria" [class.is-invalid]="invalido('categoria')">
+          <option value="" disabled>Seleccione...</option>
+          @for (c of categorias(); track c.valor) { <option [value]="c.valor">{{ c.etiqueta }}</option> }
+        </select>
+        @if (invalido('categoria')) { <div class="invalid-feedback">Seleccione una categoría.</div> }
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="precioCompra">Precio de compra (S/) *</label>
+        <input id="precioCompra" type="number" step="0.01" class="form-control" formControlName="precioCompra" [class.is-invalid]="invalido('precioCompra')">
+        @if (invalido('precioCompra')) { <div class="invalid-feedback">Debe ser mayor que 0.</div> }
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="precioVenta">Precio de venta (S/) *</label>
+        <input id="precioVenta" type="number" step="0.01" class="form-control" formControlName="precioVenta"
+               [class.is-invalid]="invalido('precioVenta') || (form.hasError('precioMenor') && form.get('precioVenta')?.touched)">
+        @if (invalido('precioVenta')) { <div class="invalid-feedback">Debe ser mayor que 0.</div> }
+        @if (form.hasError('precioMenor') && form.get('precioVenta')?.touched) {
+          <div class="invalid-feedback">No puede ser menor al precio de compra.</div>
+        }
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="stock">Stock actual *</label>
+        <input id="stock" type="number" class="form-control" formControlName="stock" [class.is-invalid]="invalido('stock')">
+        @if (invalido('stock')) { <div class="invalid-feedback">Mayor o igual a 0.</div> }
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="stockMinimo">Stock mínimo *</label>
+        <input id="stockMinimo" type="number" class="form-control" formControlName="stockMinimo" [class.is-invalid]="invalido('stockMinimo')">
+        @if (invalido('stockMinimo')) { <div class="invalid-feedback">Mayor o igual a 0.</div> }
+      </div>
+      <div class="col-md-4">
+        <label class="form-label" for="fechaVencimiento">Fecha de vencimiento</label>
+        <input id="fechaVencimiento" type="date" class="form-control" formControlName="fechaVencimiento" [class.is-invalid]="invalido('fechaVencimiento')">
+        @if (invalido('fechaVencimiento')) { <div class="invalid-feedback">No puede ser una fecha pasada.</div> }
+      </div>
+    </div>
+    <hr class="my-4">
+    <div class="d-flex gap-2 justify-content-end">
+      <a class="btn btn-light" routerLink="/productos">Cancelar</a>
+      <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+        @if (guardando()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+        <i class="bi bi-check-lg"></i> Guardar
+      </button>
+    </div>
+  </form>
+</div>

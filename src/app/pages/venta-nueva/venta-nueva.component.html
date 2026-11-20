@@ -1,0 +1,114 @@
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-cart-plus text-success"></i> Nueva venta</h1>
+    <p>Busque el producto, indique la cantidad y presione Enter para agregarlo</p>
+  </div>
+</div>
+
+@if (ventaConfirmada(); as v) {
+  <div class="card p-4 mx-auto" style="max-width: 560px">
+    <div class="text-center mb-3">
+      <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem"></i>
+      <h2 class="h4 mt-2">Venta {{ v.numero }} registrada</h2>
+      <p class="text-secondary mb-0">El stock se descontó automáticamente</p>
+    </div>
+    <table class="table table-sm">
+      <tbody>
+        @for (d of v.detalles; track d.productoId) {
+          <tr><td>{{ d.cantidad }} × {{ d.producto }}</td><td class="text-end">{{ d.subtotal | currency:'PEN':'S/ ' }}</td></tr>
+        }
+        <tr class="fw-bold"><td>Total</td><td class="text-end">{{ v.total | currency:'PEN':'S/ ' }}</td></tr>
+        <tr><td>Recibido ({{ v.metodoPago === 'EFECTIVO' ? 'efectivo' : 'billetera digital' }})</td><td class="text-end">{{ v.montoRecibido | currency:'PEN':'S/ ' }}</td></tr>
+        <tr class="text-success fw-semibold"><td>Vuelto</td><td class="text-end">{{ v.vuelto | currency:'PEN':'S/ ' }}</td></tr>
+      </tbody>
+    </table>
+    <div class="d-flex gap-2">
+      <button class="btn btn-success flex-fill" (click)="nuevaVenta()"><i class="bi bi-plus-lg"></i> Nueva venta</button>
+      <a class="btn btn-outline-secondary flex-fill" routerLink="/dashboard">Ir al dashboard</a>
+    </div>
+  </div>
+} @else {
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card p-3 mb-3">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-8 position-relative">
+            <label class="form-label" for="buscador">Producto</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
+              <input #buscador id="buscador" class="form-control" placeholder="Nombre o código..." autocomplete="off"
+                     [ngModel]="texto()" (ngModelChange)="texto.set($event)" (keydown.enter)="agregar()">
+            </div>
+            @if (sugerencias().length > 0) {
+              <div class="list-group position-absolute w-100 shadow-sm" style="z-index: 20">
+                @for (p of sugerencias(); track p.id) {
+                  <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between" (click)="agregar(p)" [disabled]="p.stock === 0">
+                    <span><span class="badge badge-codigo me-1">{{ p.codigo }}</span> {{ p.nombre }}</span>
+                    <span class="text-nowrap">{{ p.precioVenta | currency:'PEN':'S/ ' }} <small class="text-secondary">· stock {{ p.stock }}</small></span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label" for="cantidad">Cantidad</label>
+            <input id="cantidad" type="number" min="1" class="form-control" [(ngModel)]="cantidad" (keydown.enter)="agregar()">
+          </div>
+          <div class="col-6 col-md-2 d-grid">
+            <button class="btn btn-primary" (click)="agregar()" [disabled]="sugerencias().length === 0"><i class="bi bi-plus-lg"></i> Agregar</button>
+          </div>
+        </div>
+        @if (aviso()) { <div class="alert alert-warning py-2 mt-3 mb-0 small"><i class="bi bi-exclamation-triangle"></i> {{ aviso() }}</div> }
+      </div>
+
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead><tr><th>Producto</th><th class="text-end">Precio</th><th style="width: 120px">Cantidad</th><th class="text-end">Subtotal</th><th></th></tr></thead>
+            <tbody>
+              @for (l of carrito(); track l.producto.id) {
+                <tr>
+                  <td><span class="badge badge-codigo me-1">{{ l.producto.codigo }}</span> {{ l.producto.nombre }}</td>
+                  <td class="text-end">{{ l.producto.precioVenta | currency:'PEN':'S/ ' }}</td>
+                  <td><input type="number" class="form-control form-control-sm" min="1" [max]="l.producto.stock" [ngModel]="l.cantidad" (ngModelChange)="cambiarCantidad(l, $event)"></td>
+                  <td class="text-end fw-semibold">{{ l.producto.precioVenta * l.cantidad | currency:'PEN':'S/ ' }}</td>
+                  <td class="text-end"><button class="btn btn-sm btn-outline-danger" (click)="quitar(l)" title="Quitar"><i class="bi bi-x-lg"></i></button></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5" class="text-center text-secondary py-5"><i class="bi bi-cart3 fs-3 d-block mb-1"></i>El carrito está vacío</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card p-3 position-sticky" style="top: 80px">
+        <h2 class="h6 text-secondary text-uppercase">Resumen</h2>
+        <div class="d-flex justify-content-between align-items-baseline mb-3">
+          <span>Total a pagar</span><span class="fs-3 fw-bold">{{ total() | currency:'PEN':'S/ ' }}</span>
+        </div>
+        <label class="form-label" for="metodo">Método de pago</label>
+        <select id="metodo" class="form-select mb-3" [ngModel]="metodoPago()" (ngModelChange)="metodoPago.set($event)">
+          <option value="EFECTIVO">Efectivo</option>
+          <option value="BILLETERA_DIGITAL">Billetera digital (Yape / Plin)</option>
+        </select>
+        @if (metodoPago() === 'EFECTIVO') {
+          <label class="form-label" for="monto">Monto recibido (S/)</label>
+          <input id="monto" type="number" step="0.10" class="form-control mb-1" [ngModel]="montoRecibido()" (ngModelChange)="montoRecibido.set($event)"
+                 [class.is-invalid]="montoRecibido() != null && montoRecibido()! < total()">
+          @if (montoRecibido() != null && montoRecibido()! < total()) {
+            <div class="invalid-feedback mb-2">El monto recibido es menor al total.</div>
+          }
+          <div class="d-flex justify-content-between mt-2 mb-3"><span>Vuelto</span><span class="fw-semibold text-success">{{ vuelto() | currency:'PEN':'S/ ' }}</span></div>
+        }
+        @if (error()) { <div class="alert alert-danger py-2 small">{{ error() }}</div> }
+        <button class="btn btn-success btn-lg w-100" [disabled]="!puedeConfirmar()" (click)="confirmar()">
+          @if (procesando()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+          <i class="bi bi-check2-circle"></i> Confirmar venta
+        </button>
+      </div>
+    </div>
+  </div>
+}

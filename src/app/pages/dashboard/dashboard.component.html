@@ -1,0 +1,101 @@
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-speedometer2 text-primary"></i> Dashboard</h1>
+    <p>Hola, {{ auth.usuario()?.nombre }}. Este es el resumen de ventas e inventario de hoy.</p>
+  </div>
+  <a class="btn btn-success" routerLink="/ventas/nueva"><i class="bi bi-cart-plus"></i> Nueva venta</a>
+</div>
+
+@if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+
+@if (datos(); as d) {
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card kpi p-3 h-100">
+        <div class="d-flex justify-content-between">
+          <div><div class="text-secondary small">Ventas de hoy</div><div class="valor">{{ d.ventasHoy | currency:'PEN':'S/ ' }}</div></div>
+          <div class="icono bg-primary-subtle text-primary"><i class="bi bi-cash-coin"></i></div>
+        </div>
+        <small class="text-secondary">{{ d.operacionesHoy }} operaciones · ticket prom. {{ d.ticketPromedio | currency:'PEN':'S/ ' }}</small>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card kpi p-3 h-100">
+        <div class="d-flex justify-content-between">
+          <div><div class="text-secondary small">Ventas del mes</div><div class="valor">{{ d.ventasMes | currency:'PEN':'S/ ' }}</div></div>
+          <div class="icono bg-success-subtle text-success"><i class="bi bi-graph-up-arrow"></i></div>
+        </div>
+        <small class="text-secondary">Acumulado desde el día 1</small>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card kpi p-3 h-100">
+        <div class="d-flex justify-content-between">
+          <div><div class="text-secondary small">Valor del inventario</div><div class="valor">{{ d.valorInventario | currency:'PEN':'S/ ' }}</div></div>
+          <div class="icono bg-info-subtle text-info"><i class="bi bi-boxes"></i></div>
+        </div>
+        <small class="text-secondary">{{ d.totalProductos }} productos activos (a precio de compra)</small>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card kpi p-3 h-100">
+        <div class="d-flex justify-content-between">
+          <div><div class="text-secondary small">Alertas de inventario</div><div class="valor">{{ d.alertas.length }}</div></div>
+          <div class="icono bg-warning-subtle text-warning"><i class="bi bi-exclamation-triangle"></i></div>
+        </div>
+        <small class="text-secondary">{{ d.productosAgotados }} agotados · {{ d.productosStockBajo }} stock bajo · {{ d.productosPorVencer }} por vencer</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-7">
+      <div class="card h-100">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <span class="fw-semibold"><i class="bi bi-exclamation-triangle text-warning"></i> Productos que requieren atención</span>
+          <a routerLink="/alertas" class="small">Ver todas</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Producto</th><th class="text-center">Stock</th><th class="text-center">Mínimo</th><th>Estado</th></tr></thead>
+            <tbody>
+              @for (p of d.alertas.slice(0, 6); track p.id) {
+                <tr>
+                  <td><span class="badge badge-codigo me-1">{{ p.codigo }}</span> {{ p.nombre }}</td>
+                  <td class="text-center fw-semibold">{{ p.stock }}</td>
+                  <td class="text-center">{{ p.stockMinimo }}</td>
+                  <td><app-estado-badge [producto]="p" /></td>
+                </tr>
+              } @empty {
+                <tr><td colspan="4" class="text-center text-secondary py-4">Todo el inventario está en orden.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <span class="fw-semibold"><i class="bi bi-receipt text-primary"></i> Últimas ventas</span>
+          <a routerLink="/ventas" class="small">Historial</a>
+        </div>
+        <ul class="list-group list-group-flush">
+          @for (v of d.ultimasVentas; track v.id) {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <span class="badge text-bg-secondary">{{ v.numero }}</span>
+                <small class="text-secondary ms-1">{{ v.fecha | date:'dd/MM HH:mm' }} · {{ v.cajero }}</small>
+              </div>
+              <span class="fw-semibold">{{ v.total | currency:'PEN':'S/ ' }}</span>
+            </li>
+          } @empty {
+            <li class="list-group-item text-secondary">Aún no hay ventas registradas.</li>
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+} @else if (!error()) {
+  <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+}

@@ -1,0 +1,66 @@
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-box-arrow-in-down text-primary"></i> Ingreso de stock</h1>
+    <p>Registre la reposición de mercadería; el stock se actualiza automáticamente</p>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-5">
+    <div class="card p-4">
+      @if (error()) { <div class="alert alert-danger py-2">{{ error() }}</div> }
+      <form [formGroup]="form" (ngSubmit)="registrar()" novalidate>
+        <div class="mb-3">
+          <label class="form-label" for="producto">Producto *</label>
+          <select id="producto" class="form-select" formControlName="productoId" [class.is-invalid]="invalido('productoId')">
+            <option [ngValue]="null" disabled>Seleccione un producto...</option>
+            @for (p of productos(); track p.id) {
+              <option [ngValue]="p.id">{{ p.codigo }} · {{ p.nombre }} (stock {{ p.stock }})</option>
+            }
+          </select>
+          @if (invalido('productoId')) { <div class="invalid-feedback">Seleccione un producto.</div> }
+        </div>
+        @if (productoSeleccionado(); as p) {
+          <div class="alert alert-light border py-2 small">
+            Stock actual: <strong>{{ p.stock }}</strong> · mínimo: {{ p.stockMinimo }}
+          </div>
+        }
+        <div class="mb-3">
+          <label class="form-label" for="cantidad">Cantidad a ingresar *</label>
+          <input id="cantidad" type="number" min="1" class="form-control" formControlName="cantidad" [class.is-invalid]="invalido('cantidad')">
+          @if (invalido('cantidad')) { <div class="invalid-feedback">Debe ser un número entre 1 y 10000.</div> }
+        </div>
+        <div class="mb-4">
+          <label class="form-label" for="obs">Observación</label>
+          <input id="obs" class="form-control" formControlName="observacion" placeholder="Ej. Compra a distribuidor Alicorp">
+        </div>
+        <button class="btn btn-primary w-100" type="submit" [disabled]="guardando()">
+          <i class="bi bi-check-lg"></i> Registrar ingreso
+        </button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card">
+      <div class="card-header bg-white fw-semibold">Últimos ingresos</div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Fecha</th><th>Producto</th><th class="text-center">Cant.</th><th class="text-center">Stock</th><th>Usuario</th></tr></thead>
+          <tbody>
+            @for (i of ingresos(); track i.id) {
+              <tr>
+                <td class="text-nowrap">{{ i.fecha | date:'dd/MM HH:mm' }}</td>
+                <td>{{ i.producto }} @if (i.observacion) { <br><small class="text-secondary">{{ i.observacion }}</small> }</td>
+                <td class="text-center text-success fw-semibold">+{{ i.cantidad }}</td>
+                <td class="text-center text-nowrap">{{ i.stockAnterior }} → {{ i.stockNuevo }}</td>
+                <td>{{ i.usuario }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5" class="text-center text-secondary py-4">Aún no se registraron ingresos.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

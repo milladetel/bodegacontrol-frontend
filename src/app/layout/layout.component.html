@@ -1,0 +1,56 @@
+<div class="app-shell">
+  <aside class="sidebar" [class.abierto]="menuAbierto()">
+    <div class="brand">
+      <i class="bi bi-shop-window"></i>
+      <div>
+        <div class="brand-name">BodegaControl</div>
+        <small class="text-secondary">Bodega Santa Rosa</small>
+      </div>
+    </div>
+
+    <nav class="nav flex-column gap-1 px-2">
+      <a class="nav-link" routerLink="/dashboard" routerLinkActive="active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a class="nav-link" routerLink="/ventas/nueva" routerLinkActive="active"><i class="bi bi-cart-plus"></i> Nueva venta</a>
+      <a class="nav-link" routerLink="/ventas" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"><i class="bi bi-receipt"></i> Historial de ventas</a>
+      <a class="nav-link" routerLink="/productos" routerLinkActive="active"><i class="bi bi-box-seam"></i> Productos</a>
+      <a class="nav-link" routerLink="/alertas" routerLinkActive="active">
+        <i class="bi bi-exclamation-triangle"></i> Alertas
+        @if (totalAlertas() > 0) { <span class="badge text-bg-danger ms-auto">{{ totalAlertas() }}</span> }
+      </a>
+      @if (auth.esAdmin()) {
+        <div class="menu-titulo">Administración</div>
+        <a class="nav-link" routerLink="/ingresos" routerLinkActive="active"><i class="bi bi-box-arrow-in-down"></i> Ingreso de stock</a>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="usuario">
+        <div class="avatar">{{ auth.usuario()?.nombre?.charAt(0) }}</div>
+        <div class="text-truncate">
+          <div class="fw-semibold text-truncate">{{ auth.usuario()?.nombre }}</div>
+          <small class="text-secondary">{{ auth.esAdmin() ? 'Administrador' : 'Cajero' }}</small>
+        </div>
+      </div>
+      <button class="btn btn-outline-danger w-100 mt-2" (click)="auth.logout()">
+        <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <div class="contenido">
+    <header class="topbar">
+      <button class="btn btn-light d-lg-none" (click)="menuAbierto.set(!menuAbierto())" aria-label="Abrir menú">
+        <i class="bi bi-list"></i>
+      </button>
+      <span class="ms-auto text-secondary small d-none d-sm-inline">
+        <i class="bi bi-person-circle"></i> {{ auth.usuario()?.email }}
+      </span>
+      <span class="badge rounded-pill ms-auto ms-sm-0" [class.text-bg-primary]="auth.esAdmin()" [class.text-bg-success]="!auth.esAdmin()">
+        {{ auth.usuario()?.rol }}
+      </span>
+    </header>
+    <main class="p-3 p-lg-4">
+      <router-outlet />
+    </main>
+  </div>
+</div>

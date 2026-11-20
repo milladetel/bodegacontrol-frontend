@@ -1,0 +1,81 @@
+<div class="page-header">
+  <div>
+    <h1><i class="bi bi-box-seam text-primary"></i> Productos</h1>
+    <p>Catálogo, precios y stock de la bodega</p>
+  </div>
+  @if (auth.esAdmin()) {
+    <a class="btn btn-primary" routerLink="/productos/nuevo"><i class="bi bi-plus-lg"></i> Nuevo producto</a>
+  }
+</div>
+
+<div class="card p-3 mb-3">
+  <div class="row g-2">
+    <div class="col-md-5">
+      <div class="input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input class="form-control" placeholder="Buscar por nombre o código..." [(ngModel)]="buscar" (ngModelChange)="onBuscar()">
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <select class="form-select" [(ngModel)]="categoria" (change)="cargar()" aria-label="Categoría">
+        <option value="">Todas las categorías</option>
+        @for (c of categorias(); track c.valor) { <option [value]="c.valor">{{ c.etiqueta }}</option> }
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <select class="form-select" [(ngModel)]="estado" (change)="cargar()" aria-label="Estado">
+        <option value="">Todos los estados</option>
+        <option value="DISPONIBLE">Disponible</option>
+        <option value="STOCK_BAJO">Stock bajo</option>
+        <option value="AGOTADO">Agotado</option>
+      </select>
+    </div>
+    <div class="col-md-2 d-grid">
+      <button class="btn btn-outline-secondary" (click)="limpiar()"><i class="bi bi-eraser"></i> Limpiar</button>
+    </div>
+  </div>
+</div>
+
+@if (error()) { <div class="alert alert-danger">{{ error() }}</div> }
+
+<div class="card">
+  <div class="card-header bg-white d-flex justify-content-between">
+    <span class="text-secondary">{{ productos().length }} producto(s)</span>
+    @if (cargando()) { <span class="spinner-border spinner-border-sm text-primary"></span> }
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Código</th><th>Producto</th><th>Categoría</th><th class="text-end">P. venta</th>
+          <th class="text-center">Stock</th><th class="text-center">Mínimo</th><th>Vencimiento</th><th>Estado</th>
+          @if (auth.esAdmin()) { <th class="text-end">Acciones</th> }
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of productos(); track p.id) {
+          <tr>
+            <td><span class="badge badge-codigo">{{ p.codigo }}</span></td>
+            <td class="fw-medium">{{ p.nombre }}</td>
+            <td>{{ p.categoriaEtiqueta }}</td>
+            <td class="text-end">{{ p.precioVenta | currency:'PEN':'S/ ' }}</td>
+            <td class="text-center fw-semibold">{{ p.stock }}</td>
+            <td class="text-center">{{ p.stockMinimo }}</td>
+            <td>{{ p.fechaVencimiento ? (p.fechaVencimiento | date:'dd/MM/yyyy') : '—' }}</td>
+            <td><app-estado-badge [producto]="p" /></td>
+            @if (auth.esAdmin()) {
+              <td class="text-end text-nowrap">
+                <a class="btn btn-sm btn-outline-primary me-1" [routerLink]="['/productos', p.id, 'editar']" title="Editar"><i class="bi bi-pencil"></i></a>
+                <button class="btn btn-sm btn-outline-danger" (click)="eliminar(p)" title="Dar de baja"><i class="bi bi-trash"></i></button>
+              </td>
+            }
+          </tr>
+        } @empty {
+          @if (!cargando()) {
+            <tr><td colspan="9" class="text-center text-secondary py-4">No se encontraron productos con esos filtros.</td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
